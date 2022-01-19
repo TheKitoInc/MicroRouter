@@ -1,17 +1,53 @@
 <?php
 
-$path = explode('?', $_SERVER['DOCUMENT_ROOT'] . $_SERVER['REQUEST_URI'], 2);
-$path = $path[0];
-//echo "<!--".$_SERVER['DOCUMENT_ROOT']."-->\n";
-//echo "<!--".$path."-->\n";
-while (strlen($path) > strlen($_SERVER['DOCUMENT_ROOT']) + 1) {
-    //echo "<!-$path-->\n";
-    $routerPath = $path . '/index.php';
+ob_start();
 
-    if (file_exists($routerPath)) {
+function removeArgs(string $path): string
+{
+    $elements = explode('?', $path, 2);
+    return $elements[0];
+}
+
+function parsePath(string $path): string
+{
+    $elements = array();
+    foreach (explode(DIRECTORY_SEPARATOR, str_replace("\\", DIRECTORY_SEPARATOR, str_replace('/', DIRECTORY_SEPARATOR, $path))) as $element)
+    {
+        if (empty($element))
+            continue;
+
+        if ($element == '.')
+            continue;
+
+        if ($element == '..')
+            array_pop($elements);
+
+        $elements[] = $element;
+    }
+
+    return implode(DIRECTORY_SEPARATOR, $elements);
+}
+
+$SITE_ROOT = realpath(parsePath(filter_input(INPUT_SERVER, 'DOCUMENT_ROOT')));
+//error_log($SITE_ROOT);
+
+$REQUEST_PATH = parsePath(removeArgs(filter_input(INPUT_SERVER, 'REQUEST_URI')));
+//error_log($REQUEST_PATH);
+
+$PATH = parsePath($SITE_ROOT . DIRECTORY_SEPARATOR . $REQUEST_PATH);
+//error_log($PATH);
+
+
+while (strlen($PATH) > strlen($_SERVER['DOCUMENT_ROOT']) + 1)
+{
+    $routerPath = $PATH . '/index.php';
+
+    if (file_exists($routerPath))
+    {
+        ob_clean();
         require_once($routerPath);
         return;
     }
 
-    $path = dirname($path);
+    $PATH = dirname($PATH);
 }
