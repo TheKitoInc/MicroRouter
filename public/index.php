@@ -47,14 +47,12 @@ class MicroRouter
         {
             if (empty($element))
                 continue;
-
-            if ($element == '.')
+            else if ($element == '.')
                 continue;
-
-            if ($element == '..')
+            else if ($element == '..')
                 array_pop($elements);
-
-            $elements[] = $element;
+            else
+                $elements[] = $element;
         }
 
         return implode(DIRECTORY_SEPARATOR, $elements);
